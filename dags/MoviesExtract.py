@@ -1,7 +1,7 @@
 import requests
 import pandas as pd
-#import boto3
-import os
+import boto3
+from io import BytesIO
 
 def ingest_data():
     
@@ -59,11 +59,33 @@ def ingest_data():
     genres=parse_genre(get_genres(headers))
     
     def save_data(movies,genres):
-        dir=os.getcwd() 
+        #dir="/Users/deepikamahajan/Desktop/airflow-docker/dags" 
         movies_df=pd.DataFrame(movies)
         genre_df=pd.DataFrame(genres)
-        movies_df.to_parquet(dir+"/raw_data/movies_details.parquet")
-        genre_df.to_parquet(dir+"/raw_data/genres_details.parquet")
+        parquet_buffer = BytesIO()
+        genre_df.to_parquet(parquet_buffer, index=False)
+        s3_client = boto3.client('s3')
+        bucket_name = 'ott-snowflake'
+        key = 'raw_data/genre_df.parquet'
+        parquet_buffer.seek(0)  # Reset buffer position
+        s3_client.put_object(
+        Bucket=bucket_name,
+        Key=key,
+        Body=parquet_buffer.getvalue()
+        )
+        
+        # write movies_df to s3 bucket
+        key = 'raw_data/movies_df.parquet'
+        parquet_buffer.seek(0)  # Reset buffer position
+        movies_df.to_parquet(parquet_buffer, index=False)
+        s3_client.put_object(
+        Bucket=bucket_name,
+        Key=key,
+        Body=parquet_buffer.getvalue()
+        )
+
+        #movies_df.to_parquet(dir+"/RawData/movies_details.parquet")
+        #genre_df.to_parquet(dir+"/RawData/genres_details.parquet")
     
     
     for page in range(1,get_pages()+1):
