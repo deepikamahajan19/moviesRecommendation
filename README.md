@@ -22,7 +22,7 @@ Recommend movies using "cosine similarity algorithm" based on the movie given by
   * AWS account for storage
 
 ### Getting Started: ###
-  Start by fetching the project and run main.py file. 
+  Start by fetching the project and run dags -> main.py file. 
 
 ### Work in progress: ###
   Streaming the data.
